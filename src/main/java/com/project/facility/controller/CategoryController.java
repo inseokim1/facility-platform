@@ -34,13 +34,37 @@ public class CategoryController {
         // Service에 카테고리 저장 요청
         return categoryService.saveCategory(request);
     }
-
+    // PUT 요청 처리
+    // PUT /api/categories/{id}
+    @PutMapping("/{id}")
+    public CategoryResponse updateCategory(
+            @PathVariable Long id,
+            @RequestBody CategoryCreateRequest request
+    ) {
+        return categoryService.updateCategory(id, request);
+    }
     // GET 요청 처리
     // GET /api/categories
-    @GetMapping
-    public List<CategoryResponse> getCategories() {
-
-        // Service에서 카테고리 목록 조회
-        return categoryService.getCategories();
+    @GetMapping("/{id}")
+    public CategoryResponse getCategory(
+            // URL 경로에 있는 id 값을 Long 타입으로 받음
+            @PathVariable Long id
+    ) {
+        // Service에 카테고리 단건 조회 요청
+        return categoryService.getCategory(id);
     }
+    // DELETE 요청 처리
+    // DELETE /api/categories/{id}
+    @DeleteMapping("/{id}")
+    public String deleteCategory(
+            // URL 경로의 id 값을 가져옴
+            @PathVariable Long id
+    ) {
+        // Service에 카테고리 삭제 요청
+        categoryService.deleteCategory(id);
+
+        // 삭제 성공 메시지 반환
+        return "카테고리 삭제가 완료되었습니다.";
+    }
+
 }
