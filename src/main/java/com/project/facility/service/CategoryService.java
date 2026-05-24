@@ -59,4 +59,50 @@ public class CategoryService {
                 // 변환된 DTO들을 다시 List로 모음
                 .toList();
     }
+
+    // 카테고리 단건 조회 기능
+    public CategoryResponse getCategory(Long id) {
+
+        // id로 카테고리를 조회
+        // 없으면 IllegalArgumentException 예외 발생
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+
+        // Entity를 Response DTO로 변환해서 반환
+        return new CategoryResponse(category);
+    }
+
+    // 카테고리 수정 기능
+    public CategoryResponse updateCategory(Long id, CategoryCreateRequest request) {
+
+        // 수정할 카테고리가 존재하는지 id로 조회
+        // 없으면 예외 발생
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+
+        // 같은 이름의 카테고리가 이미 존재하면 중복 방지
+        if (categoryRepository.existsByName(request.getName())) {
+            throw new IllegalArgumentException("이미 존재하는 카테고리입니다.");
+        }
+
+        // 조회한 Entity의 이름을 요청 값으로 변경
+        category.setName(request.getName());
+
+        // 변경된 Entity를 DB에 저장
+        Category updatedCategory = categoryRepository.save(category);
+
+        // Entity를 Response DTO로 변환해서 반환
+        return new CategoryResponse(updatedCategory);
+    }
+    // 카테고리 삭제 기능
+    public void deleteCategory(Long id) {
+
+        // 삭제할 카테고리가 존재하는지 먼저 확인
+        // 존재하지 않으면 예외 발생
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 카테고리입니다."));
+
+        // 조회한 카테고리 Entity를 DB에서 삭제
+        categoryRepository.delete(category);
+    }
 }
