@@ -24,6 +24,12 @@ public class CategoryService {
     // Controller에서 Entity가 아니라 CategoryCreateRequest DTO를 받아서 넘겨줌
     public CategoryResponse saveCategory(CategoryCreateRequest request) {
 
+        // 같은 이름의 카테고리가 이미 존재하는지 확인
+        if (categoryRepository.existsByName(request.getName())) {
+            throw new IllegalArgumentException("이미 존재하는 카테고리입니다.");
+        }
+
+
         // DTO로 받은 데이터를 Entity로 변환
         // Entity는 DB에 저장될 객체
         Category category = new Category();
