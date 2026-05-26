@@ -43,8 +43,15 @@ public class CategoryController {
     ) {
         return categoryService.updateCategory(id, request);
     }
-    // GET 요청 처리
+
+    // GET 요청 처리 전체 조회
     // GET /api/categories
+    @GetMapping
+    public List<CategoryResponse> getCategories() {
+        return categoryService.getCategories();
+    }
+    // GET 요청 처리 단건 조회
+    // GET /api/categories/{id}
     @GetMapping("/{id}")
     public CategoryResponse getCategory(
             // URL 경로에 있는 id 값을 Long 타입으로 받음
