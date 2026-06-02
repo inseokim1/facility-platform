@@ -115,4 +115,38 @@ public class FacilityService {
         // 조회한 시설 Entity를 DB에서 삭제
         facilityRepository.delete(facility);
     }
+
+    // 시설명 검색 기능
+    public List<FacilityResponse> searchFacilities(String keyword) {
+
+        // 시설명에 keyword가 포함된 시설 목록을 조회
+        return facilityRepository.findByNameContaining(keyword)
+
+                // List<Facility>를 Stream으로 변환
+                .stream()
+
+                // Facility Entity를 FacilityResponse DTO로 변환
+                .map(FacilityResponse::new)
+
+                // 변환된 DTO들을 List로 모음
+                .toList();
+    }
+    // 카테고리별 시설 조회 기능
+    public List<FacilityResponse> searchFacilitiesByCategory(Long categoryId) {
+
+        // categoryId에 해당하는 시설 목록 조회
+        return facilityRepository.findByCategoryId(categoryId)
+                .stream()
+                .map(FacilityResponse::new)
+                .toList();
+    }
+    // 시설명 + 카테고리 복합 검색 기능
+    public List<FacilityResponse> searchFacilitiesByKeywordAndCategory(String keyword, Long categoryId) {
+
+        // 시설명에 keyword가 포함되고 categoryId가 일치하는 시설 목록 조회
+        return facilityRepository.findByNameContainingAndCategoryId(keyword, categoryId)
+                .stream()
+                .map(FacilityResponse::new)
+                .toList();
+    }
 }
