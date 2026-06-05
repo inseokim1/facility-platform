@@ -9,6 +9,11 @@ import com.project.facility.repository.FacilityRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+
+import org.springframework.data.domain.Sort;
 import java.util.List;
 
 // 시설 관련 비즈니스 로직을 처리하는 Service 계층
@@ -54,14 +59,20 @@ public class FacilityService {
         // 저장된 Entity를 Response DTO로 변환해서 반환
         return new FacilityResponse(savedFacility);
     }
-    // 시설 전체 조회 기능
-    public List<FacilityResponse> getFacilities() {
+    // 시설 전체 조회 기능 + 페이징
+    public Page<FacilityResponse> getFacilities(int page, int size) {
 
-        // facility 테이블의 전체 데이터를 조회
-        return facilityRepository.findAll()
-                .stream()
-                .map(FacilityResponse::new)
-                .toList();
+        // page, size 값을 기반으로 Pageable 객체 생성
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by("id").descending()
+        );
+        // DB에서 해당 페이지에 해당하는 시설 목록 조회
+        Page<Facility> facilities = facilityRepository.findAll(pageable);
+
+        // Page<Facility>를 Page<FacilityResponse>로 변환
+        return facilities.map(FacilityResponse::new);
     }
     // 시설 단건 조회 기능
     public FacilityResponse getFacility(Long id) {

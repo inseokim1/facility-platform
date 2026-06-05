@@ -6,7 +6,8 @@ import com.project.facility.service.FacilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+
 
 // REST API 컨트롤러
 // 시설 관련 HTTP 요청을 받는 클래스
@@ -36,12 +37,22 @@ public class FacilityController {
     }
 
 
-    // GET /api/facilities
+    // 시설 전체 조회 요청 처리 + 페이징
+    // GET /api/facilities?page=0&size=10
     @GetMapping
-    public List<FacilityResponse> getFacilities() {
-        // Service에 시설 목록 조회 요청
-        return facilityService.getFacilities();
+    public Page<FacilityResponse> getFacilities(
+            // 요청 파라미터 page 값을 받음
+            // 값이 없으면 기본값 0 사용
+            @RequestParam(defaultValue = "0") int page,
+
+            // 요청 파라미터 size 값을 받음
+            // 값이 없으면 기본값 10 사용
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        // Service에 페이징 조건을 전달하여 시설 목록 조회 요청
+        return facilityService.getFacilities(page, size);
     }
+
     // 시설 단건 조회 요청 처리
     // GET /api/facilities/{id}
     @GetMapping("/{id}")
