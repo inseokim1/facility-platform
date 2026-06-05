@@ -78,4 +78,35 @@ public class FacilityController {
         // 삭제 성공 메시지 반환
         return "시설 삭제가 완료되었습니다.";
     }
+    // 시설 검색 요청 처리
+    // GET /api/facilities/search?keyword=성북
+    @GetMapping("/search")
+    public List<FacilityResponse> searchFacilities(
+
+            // URL의 query parameter를 받음
+            @RequestParam String keyword
+    ) {
+        // Service에 검색 요청
+        return facilityService.searchFacilities(keyword);
+    }
+    // 카테고리별 시설 검색 요청 처리
+    // GET /api/facilities/search/category?categoryId=1
+    @GetMapping("/search/category")
+    public List<FacilityResponse> searchFacilitiesByCategory(
+            // URL의 query parameter에서 categoryId 값을 받음
+            @RequestParam Long categoryId
+    ) {
+        // Service에 카테고리별 시설 조회 요청
+        return facilityService.searchFacilitiesByCategory(categoryId);
+    }
+    // 시설명 + 카테고리 복합 검색 요청 처리
+    // GET /api/facilities/search/detail?keyword=성북&categoryId=1
+    @GetMapping("/search/detail")
+    public List<FacilityResponse> searchFacilitiesByKeywordAndCategory(
+            @RequestParam String keyword,
+            @RequestParam Long categoryId
+    ) {
+        return facilityService.searchFacilitiesByKeywordAndCategory(keyword, categoryId);
+    }
+
 }
