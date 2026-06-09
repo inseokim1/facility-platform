@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Page;
+import java.util.List;
+import jakarta.validation.Valid;
 
 
 // REST API 컨트롤러
@@ -29,6 +31,8 @@ public class FacilityController {
     // POST /api/facilities
     @PostMapping
     public FacilityResponse saveFacility(
+            // DTO Validation 검사 실행
+            @Valid
             // 요청 Body의 JSON 데이터를 FacilityCreateRequest DTO로 변환
             @RequestBody FacilityCreateRequest request
     ) {
@@ -68,8 +72,11 @@ public class FacilityController {
     @PutMapping("/{id}")
     public FacilityResponse updateFacility(
             // URL 경로에 있는 id 값을 Long 타입으로 받음
+            // 예: /api/facilities/5 → id = 5
             @PathVariable Long id,
-
+            // DTO Validation 검사 실행
+            // @NotBlank, @NotNull 등을 검사
+            @Valid
             // 요청 Body의 JSON 데이터를 FacilityCreateRequest DTO로 변환
             @RequestBody FacilityCreateRequest request
     ) {
