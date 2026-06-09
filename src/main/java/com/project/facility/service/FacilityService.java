@@ -63,14 +63,16 @@ public class FacilityService {
     public Page<FacilityResponse> getFacilities(int page, int size) {
 
         // page, size 값을 기반으로 Pageable 객체 생성
+        // page=0,size=3 -> 첫 페이지 3개 조회
         Pageable pageable = PageRequest.of(
                 page,
                 size,
                 Sort.by("id").descending()
         );
-        // DB에서 해당 페이지에 해당하는 시설 목록 조회
+        // DB에서 해당 페이징 조건에 해당하는 시설 목록 조회
         Page<Facility> facilities = facilityRepository.findAll(pageable);
-
+        // Entity → Response DTO 변환
+        // Page 정보(totalPages 등)는 유지됨
         // Page<Facility>를 Page<FacilityResponse>로 변환
         return facilities.map(FacilityResponse::new);
     }
