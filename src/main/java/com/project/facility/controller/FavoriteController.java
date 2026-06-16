@@ -60,4 +60,25 @@ public class FavoriteController {
         // 삭제 성공 메시지 반환
         return "즐겨찾기 삭제가 완료되었습니다.";
     }
+    // 즐겨찾기 필터 조회
+    @GetMapping("/users/{userId}/filter")
+    public List<FavoriteResponse> getFavoritesWithFilter(
+
+            // 사용자 ID
+            @PathVariable Long userId,
+
+            // 지역 (선택)
+            @RequestParam(required = false)
+            String region,
+
+            // 카테고리 ID (선택)
+            @RequestParam(required = false)
+            Long categoryId
+    ) {
+        return favoriteService.getFavoritesWithFilter(
+                userId,
+                region,
+                categoryId
+        );
+    }
 }
