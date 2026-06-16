@@ -77,4 +77,57 @@ public class FavoriteService {
         // 즐겨찾기 삭제
         favoriteRepository.deleteById(favoriteId);
     }
+    // 사용자 즐겨찾기 필터 조회
+    public List<FavoriteResponse> getFavoritesWithFilter(
+            Long userId,
+            String region,
+            Long categoryId
+    ) {
+
+        List<Favorite> favorites;
+
+        // 지역 + 카테고리
+        if (region != null && categoryId != null) {
+
+            favorites =
+                    favoriteRepository
+                            .findByUser_IdAndFacility_AddressContainingAndFacility_Category_Id(
+                                    userId,
+                                    region,
+                                    categoryId
+                            );
+
+        }
+        // 지역만
+        else if (region != null) {
+
+            favorites =
+                    favoriteRepository
+                            .findByUser_IdAndFacility_AddressContaining(
+                                    userId,
+                                    region
+                            );
+
+        }
+        // 카테고리만
+        else if (categoryId != null) {
+
+            favorites =
+                    favoriteRepository
+                            .findByUser_IdAndFacility_Category_Id(
+                                    userId,
+                                    categoryId
+                            );
+
+        }
+        else {
+            throw new IllegalArgumentException(
+                    "지역 또는 카테고리 조건이 필요합니다."
+            );
+        }
+
+        return favorites.stream()
+                .map(FavoriteResponse::new)
+                .toList();
+    }
 }
