@@ -16,4 +16,8 @@ public class FavoriteCreateRequest {
     // 즐겨찾기할 시설 ID
     @NotNull(message = "시설 ID는 필수입니다.")
     private Long facilityId;
+
+    // 즐겨찾기를 추가할 그룹 ID
+    @NotNull(message = "그룹 ID는 필수입니다.")
+    private Long groupId;
 }

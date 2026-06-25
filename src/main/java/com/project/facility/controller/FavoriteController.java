@@ -1,6 +1,7 @@
 package com.project.facility.controller;
 
 import com.project.facility.dto.FavoriteCreateRequest;
+import com.project.facility.dto.FavoriteMoveGroupRequest;
 import com.project.facility.dto.FavoriteResponse;
 import com.project.facility.service.FavoriteService;
 import jakarta.validation.Valid;
@@ -79,6 +80,35 @@ public class FavoriteController {
                 userId,
                 region,
                 categoryId
+        );
+    }
+    // 특정 그룹에 속한 즐겨찾기 목록 조회
+    // GET /api/favorites/groups/{groupId}
+    @GetMapping("/groups/{groupId}")
+    public List<FavoriteResponse> getFavoritesByGroup(
+
+            // URL 경로의 그룹 ID
+            @PathVariable Long groupId
+    ) {
+        return favoriteService.getFavoritesByGroup(groupId);
+    }
+    // 즐겨찾기를 다른 그룹으로 이동
+// PUT /api/favorites/{favoriteId}/group
+    @PutMapping("/{favoriteId}/group")
+    public FavoriteResponse moveFavoriteGroup(
+
+            // URL 경로의 즐겨찾기 ID
+            @PathVariable Long favoriteId,
+
+            // DTO Validation 검사
+            @Valid
+
+            // JSON -> FavoriteMoveGroupRequest DTO 변환
+            @RequestBody FavoriteMoveGroupRequest request
+    ) {
+        return favoriteService.moveFavoriteGroup(
+                favoriteId,
+                request
         );
     }
 }

@@ -43,4 +43,12 @@ public class Favorite {
     // favorites 테이블의 facility_id 컬럼과 Facility 테이블의 id를 연결
     @JoinColumn(name = "facility_id", nullable = false)
     private Facility facility;
+
+    // 즐겨찾기가 속한 그룹
+    // 예: 운동시설, 화장실, 공부장소
+    @ManyToOne(fetch = FetchType.LAZY)
+
+    // favorites 테이블의 group_id 컬럼과 favorite_groups 테이블의 id를 연결
+    @JoinColumn(name = "group_id", nullable = false)
+    private FavoriteGroup favoriteGroup;
 }
