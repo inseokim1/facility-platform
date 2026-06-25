@@ -1,6 +1,7 @@
 package com.project.facility.service;
 
 import com.project.facility.dto.FavoriteCreateRequest;
+import com.project.facility.dto.FavoriteMoveGroupRequest;
 import com.project.facility.dto.FavoriteResponse;
 import com.project.facility.entity.Facility;
 import com.project.facility.entity.Favorite;
@@ -8,6 +9,9 @@ import com.project.facility.entity.User;
 import com.project.facility.repository.FacilityRepository;
 import com.project.facility.repository.FavoriteRepository;
 import com.project.facility.repository.UserRepository;
+import com.project.facility.entity.FavoriteGroup;
+import com.project.facility.repository.FavoriteGroupRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -18,6 +22,7 @@ public class FavoriteService {
     private final UserRepository userRepository;
     private final FacilityRepository facilityRepository;
     private final FavoriteRepository favoriteRepository;
+    private final FavoriteGroupRepository favoriteGroupRepository;
 
     // 즐겨찾기 등록
     public FavoriteResponse saveFavorite(FavoriteCreateRequest request) {
@@ -29,6 +34,11 @@ public class FavoriteService {
         // 시설 조회
         Facility facility = facilityRepository.findById(request.getFacilityId())
                 .orElseThrow(() -> new IllegalArgumentException("시설을 찾을 수 없습니다."));
+
+        // 즐겨찾기 그룹 조회
+        FavoriteGroup favoriteGroup = favoriteGroupRepository.findById(request.getGroupId())
+                .orElseThrow(() ->
+                        new IllegalArgumentException("즐겨찾기 그룹을 찾을 수 없습니다."));
 
         // 중복 즐겨찾기 확인
         if (favoriteRepository.existsByUser_IdAndFacility_Id(
@@ -42,6 +52,7 @@ public class FavoriteService {
         Favorite favorite = new Favorite();
         favorite.setUser(user);
         favorite.setFacility(facility);
+        favorite.setFavoriteGroup(favoriteGroup);
 
         // DB 저장
         Favorite savedFavorite = favoriteRepository.save(favorite);
@@ -130,4 +141,42 @@ public class FavoriteService {
                 .map(FavoriteResponse::new)
                 .toList();
     }
+    // 특정 그룹에 속한 즐겨찾기 목록 조회
+    public List<FavoriteResponse> getFavoritesByGroup(Long groupId) {
+
+        // 그룹에 속한 즐겨찾기 목록 조회
+        List<Favorite> favorites =
+                favoriteRepository.findByFavoriteGroup_Id(groupId);
+
+        // Entity -> DTO 변환
+        return favorites.stream()
+                .map(FavoriteResponse::new)
+                .toList();
+    }
+    // 즐겨찾기를 다른 그룹으로 이동
+    @Transactional
+    public FavoriteResponse moveFavoriteGroup(
+            Long favoriteId,
+            FavoriteMoveGroupRequest request
+
+    ) {
+
+        // 즐겨찾기 조회
+        Favorite favorite = favoriteRepository.findById(favoriteId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("즐겨찾기를 찾을 수 없습니다."));
+
+        // 이동할 그룹 조회
+        FavoriteGroup targetGroup =
+                favoriteGroupRepository.findById(request.getGroupId())
+                        .orElseThrow(() ->
+                                new IllegalArgumentException("즐겨찾기 그룹을 찾을 수 없습니다."));
+
+        // 즐겨찾기의 그룹 변경
+        favorite.setFavoriteGroup(targetGroup);
+
+        // 변경된 즐겨찾기 응답 반환
+        return new FavoriteResponse(favorite);
+    }
+
 }

@@ -19,10 +19,18 @@ public class FavoriteResponse {
     // 시설명
     private String facilityName;
 
+    // 즐겨찾기 그룹 ID
+    private Long groupId;
+
+    // 즐겨찾기 그룹 이름
+    private String groupName;
+
     public FavoriteResponse(Favorite favorite) {
         this.id = favorite.getId();
         this.userId = favorite.getUser().getId();
         this.facilityId = favorite.getFacility().getId();
         this.facilityName = favorite.getFacility().getName();
+        this.groupId = favorite.getFavoriteGroup().getId();
+        this.groupName = favorite.getFavoriteGroup().getName();
     }
 }

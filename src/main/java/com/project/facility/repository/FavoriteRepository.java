@@ -35,4 +35,9 @@ public interface FavoriteRepository
             String region,
             Long categoryId
     );
+    // 특정 그룹에 속한 즐겨찾기 목록 조회
+    List<Favorite> findByFavoriteGroup_Id(Long groupId);
+
+    // 특정 그룹에 속한 즐겨찾기 전체 삭제
+    void deleteByFavoriteGroup_Id(Long groupId);
 }
