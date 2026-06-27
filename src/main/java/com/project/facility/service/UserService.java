@@ -5,6 +5,7 @@ import com.project.facility.dto.UserResponse;
 import com.project.facility.entity.User;
 import com.project.facility.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class UserService {
 
     // User DB 접근 객체
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // 사용자 등록
     public UserResponse saveUser(UserCreateRequest request) {
@@ -30,7 +32,10 @@ public class UserService {
         // DTO -> Entity 변환
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        // 비밀번호를 BCrypt로 암호화하여 저장
+        user.setPassword(
+                passwordEncoder.encode(request.getPassword())
+        );
         user.setName(request.getName());
         user.setRole(request.getRole());
 
@@ -76,8 +81,10 @@ public class UserService {
         // 이메일 수정
         user.setEmail(request.getEmail());
 
-        // 비밀번호 수정
-        user.setPassword(request.getPassword());
+        // 비밀번호를 BCrypt로 암호화하여 저장
+        user.setPassword(
+                passwordEncoder.encode(request.getPassword())
+        );
 
         // 이름 수정
         user.setName(request.getName());
