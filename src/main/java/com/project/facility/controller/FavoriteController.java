@@ -6,6 +6,7 @@ import com.project.facility.dto.FavoriteResponse;
 import com.project.facility.service.FavoriteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 // 즐겨찾기 관련 HTTP 요청을 처리하는 Controller
@@ -93,7 +94,7 @@ public class FavoriteController {
         return favoriteService.getFavoritesByGroup(groupId);
     }
     // 즐겨찾기를 다른 그룹으로 이동
-// PUT /api/favorites/{favoriteId}/group
+    // PUT /api/favorites/{favoriteId}/group
     @PutMapping("/{favoriteId}/group")
     public FavoriteResponse moveFavoriteGroup(
 
@@ -110,5 +111,15 @@ public class FavoriteController {
                 favoriteId,
                 request
         );
+    }
+    // 현재 로그인한 사용자의 즐겨찾기 조회
+    @GetMapping("/me")
+    public ResponseEntity<List<FavoriteResponse>> getMyFavorites() {
+
+        // Service를 호출하여 현재 로그인한 사용자의 즐겨찾기 목록 조회
+        List<FavoriteResponse> favorites = favoriteService.getMyFavorites();
+
+        // 조회 결과를 200 OK와 함께 반환
+        return ResponseEntity.ok(favorites);
     }
 }

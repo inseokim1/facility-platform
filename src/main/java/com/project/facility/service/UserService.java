@@ -5,6 +5,7 @@ import com.project.facility.dto.UserResponse;
 import com.project.facility.entity.User;
 import com.project.facility.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -108,5 +109,16 @@ public class UserService {
 
         // 사용자 삭제
         userRepository.deleteById(id);
+    }
+    // 현재 로그인한 사용자 조회
+    public User getCurrentUser() {
+
+        String email = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("로그인 사용자를 찾을 수 없습니다."));
     }
 }

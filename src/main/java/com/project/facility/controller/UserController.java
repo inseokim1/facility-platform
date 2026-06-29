@@ -2,9 +2,11 @@ package com.project.facility.controller;
 
 import com.project.facility.dto.UserCreateRequest;
 import com.project.facility.dto.UserResponse;
+import com.project.facility.entity.User;
 import com.project.facility.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -79,5 +81,13 @@ public class UserController {
         userService.deleteUser(id);
 
         return "사용자 삭제가 완료되었습니다.";
+    }
+    // 현재 로그인한 사용자 조회
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> getMyInfo() {
+
+        User user = userService.getCurrentUser();
+
+        return ResponseEntity.ok(new UserResponse(user));
     }
 }

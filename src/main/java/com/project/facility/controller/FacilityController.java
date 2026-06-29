@@ -126,5 +126,15 @@ public class FacilityController {
     ) {
         return facilityService.searchFacilitiesByKeywordAndCategory(keyword, categoryId);
     }
+    // 시설명 정확 일치 검색 요청 처리
+    // GET /api/facilities/search/exact?name=서울주차장
+    @GetMapping("/search/exact")
+    public List<FacilityResponse> searchFacilitiesByExactName(
 
+            // 정확히 검색할 시설명
+            @RequestParam String name
+    ) {
+        // Service에 시설명 정확 검색 요청
+        return facilityService.searchFacilitiesByExactName(name);
+    }
 }

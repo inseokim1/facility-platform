@@ -1,5 +1,6 @@
 package com.project.facility.service;
 
+import com.project.facility.dto.FacilityResponse;
 import com.project.facility.dto.FavoriteCreateRequest;
 import com.project.facility.dto.FavoriteMoveGroupRequest;
 import com.project.facility.dto.FavoriteResponse;
@@ -23,6 +24,8 @@ public class FavoriteService {
     private final FacilityRepository facilityRepository;
     private final FavoriteRepository favoriteRepository;
     private final FavoriteGroupRepository favoriteGroupRepository;
+    private final UserService userService;
+
 
     // 즐겨찾기 등록
     public FavoriteResponse saveFavorite(FavoriteCreateRequest request) {
@@ -61,7 +64,7 @@ public class FavoriteService {
         return new FavoriteResponse(savedFavorite);
     }
 
-    // 특정 사용자의 즐겨찾기 목록 조회
+    // 특정 사용자의 즐겨찾기 목록 조회(관리자 기능)
     public List<FavoriteResponse> getFavoritesByUser(Long userId) {
 
         // 사용자 존재 여부 확인
@@ -71,6 +74,20 @@ public class FavoriteService {
 
         // userId 기준으로 즐겨찾기 목록 조회
         List<Favorite> favorites = favoriteRepository.findByUserId(userId);
+
+        // Entity -> DTO 변환
+        return favorites.stream()
+                .map(FavoriteResponse::new)
+                .toList();
+    }
+    // 로그인 사용자의 즐겨찾기 목록 조회(로그인 사용자 기능)
+    public List<FavoriteResponse> getMyFavorites() {
+
+        // JWT에서 현재 로그인 사용자 조회
+        User user = userService.getCurrentUser();
+
+        // 현재 로그인한 사용자의 즐겨찾기 조회
+        List<Favorite> favorites = favoriteRepository.findByUserId(user.getId());
 
         // Entity -> DTO 변환
         return favorites.stream()
@@ -178,5 +195,16 @@ public class FavoriteService {
         // 변경된 즐겨찾기 응답 반환
         return new FavoriteResponse(favorite);
     }
+    // 시설명 정확 일치 검색
+    public List<FacilityResponse> searchFacilitiesByExactName(String name) {
 
+        // name 컬럼을 기준으로 정확히 일치하는 시설 조회
+        // DB에서는 WHERE name = ? 형태로 실행됨
+        List<Facility> facilities = facilityRepository.findByName(name);
+
+        // Entity -> DTO 변환
+        return facilities.stream()
+                .map(FacilityResponse::new)
+                .toList();
+    }
 }
