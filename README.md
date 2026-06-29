@@ -1,255 +1,192 @@
-# Facility Platform
+# 즐겨찾기(Favorite) 기능 구현
 
-공공시설 정보를 효율적으로 조회하고 관리할 수 있는 Spring Boot 기반 공공시설 통합 플랫폼입니다.
+## 작업 내용
 
-공공데이터를 활용하여 시설 정보를 제공하고, 사용자가 카테고리별 시설 조회, 시설 검색, 즐겨찾기, 리뷰, 위치 기반 검색 기능을 사용할 수 있도록 설계하고 있습니다.
+### Favorite Entity 생성
 
----
+* Favorite Entity 생성
+* User와 Facility를 연결하는 중간 테이블 구현
+* @ManyToOne 연관관계 적용
+* FetchType.LAZY 적용
 
-## 프로젝트 목표
+### 즐겨찾기 기능 구현
 
-기존 공공시설 정보는 여러 사이트에 분산되어 있어 원하는 시설을 찾기 어렵습니다.
+* 즐겨찾기 등록
+* 사용자별 즐겨찾기 조회
+* 즐겨찾기 삭제
 
-본 프로젝트는 공공시설 정보를 통합 관리하고, 사용자가 쉽고 빠르게 시설 정보를 조회할 수 있는 플랫폼 구축을 목표로 합니다.
+### 중복 즐겨찾기 방지
 
-또한 단순 CRUD 구현에 그치지 않고, 검색 기능, 페이징, 정렬, Validation, 보안, 위치 기반 서비스 등을 단계적으로 적용하며 실무 환경과 유사한 구조를 학습하는 것을 목표로 합니다.
-
----
-
-## 기술 스택
-
-* Java 17
-* Spring Boot
-* Spring Data JPA
-* MySQL
-* Lombok
-* Validation
-* Gradle
-* Git / GitHub
+* user_id + facility_id 조합에 Unique Constraint 적용
+* 동일 사용자가 같은 시설을 중복 등록할 수 없도록 구현
+* 중복 등록 시 예외 처리
 
 ---
 
-## 현재 구현 기능
-
-### Category
-
-* 카테고리 등록
-* 카테고리 조회
-* 카테고리 수정
-* 카테고리 삭제
-* 카테고리 중복 등록 방지
-
-### Facility
-
-* 시설 등록
-* 시설 조회
-* 시설 단건 조회
-* 시설 수정
-* 시설 삭제
-
-### 시설 검색
-
-* 시설명 기반 검색
-* 카테고리 기반 검색
-* 시설명 + 카테고리 복합 검색
-
-### Pagination & Sort
-
-* Pageable 기반 페이지 조회
-* 최신 등록순 정렬 (id DESC)
-
-### Validation
-
-* @NotBlank 기반 문자열 검증
-* @NotNull 기반 필수값 검증
-* @Valid 적용
-* GlobalExceptionHandler 기반 예외 처리
-
----
-
-## API 예시
-
-### 카테고리 등록
-
-```http
-POST /api/categories
-```
-
-### 카테고리 조회
-
-```http
-GET /api/categories
-```
-
-### 시설 등록
-
-```http
-POST /api/facilities
-```
-
-### 시설 조회
-
-```http
-GET /api/facilities
-```
-
-### 시설 검색
-
-```http
-GET /api/facilities/search?keyword=주차장
-```
-
-### 페이징 조회
-
-```http
-GET /api/facilities?page=0&size=3
-```
-
----
-
-## 개발 진행 현황
-
-* [x] Category CRUD
-* [x] Facility CRUD
-* [x] 시설 검색
-* [x] Pagination
-* [x] Sort
-* [x] Validation
-* [ ] User CRUD
-* [ ] Favorite
-* [ ] Review
-* [ ] Spring Security
-* [ ] 위치 기반 검색
-* [ ] 공공데이터 연동
-
----
-
-## 프로젝트 구조
+## Favorite 테이블 구조
 
 ```text
-Controller
-↓
-DTO
-↓
-Service
-↓
-Entity
-↓
-Repository
-↓
-Database
+favorites
+
+id
+user_id
+facility_id
 ```
 
-### Pagination 흐름
+### 설계 이유
+
+Favorite은 User와 Facility의 다대다(M:N) 관계를 관리하기 위한 중간 테이블로 구현하였다.
+
+기본키는 별도의 id(PK)를 사용하였다.
+
+```text
+PK = id
+UNIQUE = (user_id, facility_id)
+```
+
+복합키(user_id, facility_id)를 사용하는 방식도 고려하였으나,
+
+* JPA 매핑 단순화
+* Entity 관리 편의성
+* 향후 컬럼 확장(createdAt 등)
+
+을 고려하여 별도 PK를 채택하였다.
+
+대신 user_id + facility_id 조합에 Unique Constraint를 적용하여 중복 즐겨찾기를 방지하였다.
+
+---
+
+## 즐겨찾기 등록 흐름
 
 ```text
 Postman
 ↓
-Controller
+FavoriteCreateRequest
 ↓
-Pageable
+User 조회
 ↓
-Repository
+Facility 조회
 ↓
-Page<Entity>
+중복 여부 확인
 ↓
-Page<Response DTO>
+Favorite 생성
 ↓
-JSON 응답
+DB 저장
+↓
+FavoriteResponse 반환
 ```
 
-### Validation 흐름
+---
+
+## 즐겨찾기 조회 흐름
 
 ```text
-Postman
+GET /api/favorites/users/{userId}
 ↓
-JSON 요청
+userId 기준 조회
 ↓
-@RequestBody
+Favorite 목록 조회
 ↓
-DTO 생성
+FavoriteResponse 변환
 ↓
-@Valid
-↓
-@NotBlank / @NotNull 검사
-↓
-MethodArgumentNotValidException
-↓
-GlobalExceptionHandler
-↓
-400 Bad Request
+응답 반환
 ```
 
 ---
 
-## 주요 학습 내용
+## 테스트
 
-* DTO와 Entity 분리
-* JPA Repository 활용
-* 메서드 네이밍 기반 Query 생성
-* Pageable 기반 페이징 처리
-* Sort를 활용한 정렬 처리
-* Validation 및 전역 예외 처리
-* 계층형 아키텍처 기반 API 설계
+### 즐겨찾기 등록
+
+요청
+
+```json
+{
+  "userId": 1,
+  "facilityId": 2
+}
+```
+
+결과
+<img width="739" height="625" alt="favorite 등록" src="https://github.com/user-attachments/assets/d69b4156-f754-4cff-81ec-085d2ed9cfad" />
+
+```
 
 ---
 
-## 향후 계획
+### 즐겨찾기 조회
 
-### 사용자 기능 확장
+요청
 
-* User CRUD 구현
-* 사용자별 시설 이용 기능 구축
-* 사용자 정보 관리 기능 추가
+```http
+GET /api/favorites/users/1
+```
 
-### 사용자 맞춤 서비스
+결과
 
-* 즐겨찾기(Favorite) 기능 구현
-* 리뷰(Review) 기능 구현
-* 사용자 활동 기반 서비스 확장
+등록된 즐겨찾기 목록 조회 성공
 
-### 보안 강화
+<img width="725" height="630" alt="favorite 조회" src="https://github.com/user-attachments/assets/b3eb65a0-33ee-4434-83e0-a76ffbbc1170" />
 
-* Spring Security 적용
-* BCrypt를 이용한 비밀번호 암호화
-* 인증(Authentication) 및 인가(Authorization) 구현
-* Role 기반 접근 제어 적용
 
-### 위치 기반 서비스
+---
 
-* 사용자 위치 기반 시설 조회
-* 거리순 정렬 기능 제공
-* 지도 API 연동
+### 즐겨찾기 삭제
 
-### 공공데이터 연동
+요청
 
-* 공공데이터 API 연동
-* 시설 정보 자동 수집 및 동기화
-* 중복 데이터 저장 방지 전략 적용
+```http
+DELETE /api/favorites/1
+```
 
-### 운영 환경 고려
+결과
 
-* 서버 운영 중 데이터베이스 스키마 변경 전략 학습
-* 데이터 마이그레이션 방식 적용
-* 무중단 배포 환경 구성 검토
+```text
+즐겨찾기 삭제가 완료되었습니다.
+```
 
-### 성능 최적화
 
-* 인덱스(Index)를 활용한 조회 성능 개선
-* 대용량 데이터 환경에서의 페이징 최적화
-* 캐시 적용 검토
 
-### 동시성 문제 해결
+<img width="725" height="516" alt="favorite 삭제" src="https://github.com/user-attachments/assets/6c195ea5-aefa-4b54-82ce-55e5cb16e483" />
 
-* 공공데이터 동기화 중복 저장 방지
-* 여러 관리자 동시 수정 상황 처리
-* 즐겨찾기 중복 등록 방지
-* 트랜잭션(Transaction) 기반 데이터 정합성 유지
+삭제 후 조회 시 빈 배열([]) 반환 확인
 
-### 네트워크 및 보안 학습
+<img width="738" height="513" alt="favorite 삭제 확인" src="https://github.com/user-attachments/assets/86b0e593-081c-4b45-ad05-bb0770b4a807" />
 
-* HTTPS 통신 구조 이해
-* RSA 기반 키 교환 방식 학습
-* AES 기반 데이터 암호화 적용
-* 인증 정보 및 암호화 키 관리 방법 학습
+---
 
+## 학습 내용
+
+### 연관관계
+
+* Favorite은 User와 Facility를 연결하는 중간 Entity로 설계
+* @ManyToOne을 사용하여 User, Facility와 연관관계 설정
+
+### FetchType.LAZY
+
+* 연관 객체(User, Facility)를 즉시 조회하지 않고 필요 시 조회
+* 불필요한 SQL 실행을 줄이는 방법 학습
+
+### PK 설계
+
+* email과 같은 자연키 대신 Long id를 PK로 사용
+* 변경 가능한 값보다 변경되지 않는 식별자가 PK로 적합함을 학습
+
+### Unique Constraint
+
+* user_id + facility_id 조합으로 중복 즐겨찾기 방지
+* DB 제약조건과 Service 검증을 함께 적용
+
+### 향후 개선 예정
+
+현재는 인증 기능이 구현되지 않아 userId를 PathVariable로 전달하여 조회하도록 구현하였다.
+
+향후 Spring Security + JWT 적용 후에는
+
+```http
+GET /api/favorites/me
+```
+
+형태로 변경하여 로그인 사용자 기준 조회를 구현할 예정이다.
+
+또한 즐겨찾기 목록에 지역 및 카테고리 필터 기능을 추가할 예정이다.
