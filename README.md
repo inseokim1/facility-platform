@@ -1,255 +1,375 @@
-# Facility Platform
+# 즐겨찾기(Favorite) 필터링 기능 구현
 
-공공시설 정보를 효율적으로 조회하고 관리할 수 있는 Spring Boot 기반 공공시설 통합 플랫폼입니다.
+## 작업 내용
 
-공공데이터를 활용하여 시설 정보를 제공하고, 사용자가 카테고리별 시설 조회, 시설 검색, 즐겨찾기, 리뷰, 위치 기반 검색 기능을 사용할 수 있도록 설계하고 있습니다.
+기존 즐겨찾기 기능에 조건 검색 기능을 추가하여 사용자가 원하는 즐겨찾기 시설만 조회할 수 있도록 개선하였습니다.
 
----
+### 추가 기능
 
-## 프로젝트 목표
-
-기존 공공시설 정보는 여러 사이트에 분산되어 있어 원하는 시설을 찾기 어렵습니다.
-
-본 프로젝트는 공공시설 정보를 통합 관리하고, 사용자가 쉽고 빠르게 시설 정보를 조회할 수 있는 플랫폼 구축을 목표로 합니다.
-
-또한 단순 CRUD 구현에 그치지 않고, 검색 기능, 페이징, 정렬, Validation, 보안, 위치 기반 서비스 등을 단계적으로 적용하며 실무 환경과 유사한 구조를 학습하는 것을 목표로 합니다.
+* 지역(region) 기반 필터링
+* 카테고리(categoryId) 기반 필터링
+* 지역 + 카테고리 복합 조건 검색
 
 ---
 
-## 기술 스택
+## API
 
-* Java 17
-* Spring Boot
-* Spring Data JPA
-* MySQL
-* Lombok
-* Validation
-* Gradle
-* Git / GitHub
+### 지역 필터
+
+```http
+GET /api/favorites/users/{userId}/filter?region=서울
+```
+
+### 카테고리 필터
+
+```http
+GET /api/favorites/users/{userId}/filter?categoryId=2
+```
+
+### 지역 + 카테고리 필터
+
+```http
+GET /api/favorites/users/{userId}/filter?region=경기도&categoryId=2
+```
 
 ---
 
-## 현재 구현 기능
+## 구현 흐름
+
+```text
+사용자 요청
+↓
+@RequestParam 수신
+↓
+region / categoryId 값 확인
+↓
+조건 분기
+↓
+Repository 조회
+↓
+Entity → DTO 변환
+↓
+응답 반환
+```
+
+---
+
+## 검색 조건 분기
+
+```java
+if (region != null && categoryId != null)
+
+else if (region != null)
+
+else if (categoryId != null)
+
+else
+```
+
+복합 조건이 존재하는 경우를 가장 먼저 검사하도록 구현하였다.
+
+예를 들어
+
+```http
+GET /api/favorites/users/1/filter?region=서울&categoryId=1
+```
+
+요청 시
+
+```java
+else if(region != null)
+```
+
+를 먼저 검사하면 categoryId 조건이 무시될 수 있기 때문에
+
+```java
+if(region != null && categoryId != null)
+```
+
+를 최우선으로 배치하였다.
+
+---
+
+## Repository 구현
+
+초기 구현
+
+```java
+findByUserIdAndFacilityAddressContaining(...)
+```
+
+```java
+findByUserIdAndFacilityCategoryId(...)
+```
+
+형태로 작성하였다.
+
+하지만 의도한 결과가 반환되지 않는 문제가 발생하였다.
+
+---
+
+## 문제 발생
+
+### 현상
+
+```http
+GET /api/favorites/users/1/filter?region=서울
+```
+
+조회 시
+
+```text
+서울 시설만 조회되어야 함
+```
+
+에도 불구하고
+
+```text
+경기도 시설까지 함께 조회
+```
+
+되는 문제가 발생하였다.
+<img width="642" height="704" alt="favoite에서의 조회 오류(_ 넣기전) " src="https://github.com/user-attachments/assets/8eef59a5-bdf5-48bc-adc0-b95cba3998c5" />
+
+---
+
+## 원인 분석
+
+Favorite Entity는
+
+```java
+private User user;
+
+private Facility facility;
+```
+
+구조를 가지고 있다.
+
+즉 Favorite Entity에는
+
+```java
+userId
+facilityId
+```
+
+필드가 직접 존재하지 않는다.
+
+JPA는 실제로
+
+```text
+user.id
+facility.address
+facility.category.id
+```
+
+경로를 탐색해야 한다.
+
+---
+
+## 해결 방법
+
+Repository 메서드를 아래와 같이 수정하였다.
+
+### 수정 전
+
+```java
+findByUserIdAndFacilityAddressContaining(...)
+```
+
+### 수정 후
+
+```java
+findByUser_IdAndFacility_AddressContaining(...)
+```
+
+---
+
+### 수정 전
+
+```java
+findByUserIdAndFacilityCategoryId(...)
+```
+
+### 수정 후
+
+```java
+findByUser_IdAndFacility_Category_Id(...)
+```
+
+---
+
+### 수정 전
+
+```java
+findByUserIdAndFacilityAddressContainingAndFacilityCategoryId(...)
+```
+
+### 수정 후
+
+```java
+findByUser_IdAndFacility_AddressContainingAndFacility_Category_Id(...)
+```
+
+연관 객체의 필드를 명시적으로 탐색하도록 수정하여 문제를 해결하였다.
+
+---
+
+## 테스트 데이터
 
 ### Category
 
-* 카테고리 등록
-* 카테고리 조회
-* 카테고리 수정
-* 카테고리 삭제
-* 카테고리 중복 등록 방지
+```text
+1 | 공영주차장
+2 | 체육관
+```
 
 ### Facility
 
-* 시설 등록
-* 시설 조회
-* 시설 단건 조회
-* 시설 수정
-* 시설 삭제
-
-### 시설 검색
-
-* 시설명 기반 검색
-* 카테고리 기반 검색
-* 시설명 + 카테고리 복합 검색
-
-### Pagination & Sort
-
-* Pageable 기반 페이지 조회
-* 최신 등록순 정렬 (id DESC)
-
-### Validation
-
-* @NotBlank 기반 문자열 검증
-* @NotNull 기반 필수값 검증
-* @Valid 적용
-* GlobalExceptionHandler 기반 예외 처리
-
----
-
-## API 예시
-
-### 카테고리 등록
-
-```http
-POST /api/categories
+```text
+성북구 공중화장실
+서울특별시 성북구
+categoryId = 1
 ```
-
-### 카테고리 조회
-
-```http
-GET /api/categories
-```
-
-### 시설 등록
-
-```http
-POST /api/facilities
-```
-
-### 시설 조회
-
-```http
-GET /api/facilities
-```
-
-### 시설 검색
-
-```http
-GET /api/facilities/search?keyword=주차장
-```
-
-### 페이징 조회
-
-```http
-GET /api/facilities?page=0&size=3
-```
-
----
-
-## 개발 진행 현황
-
-* [x] Category CRUD
-* [x] Facility CRUD
-* [x] 시설 검색
-* [x] Pagination
-* [x] Sort
-* [x] Validation
-* [ ] User CRUD
-* [ ] Favorite
-* [ ] Review
-* [ ] Spring Security
-* [ ] 위치 기반 검색
-* [ ] 공공데이터 연동
-
----
-
-## 프로젝트 구조
 
 ```text
-Controller
-↓
-DTO
-↓
-Service
-↓
-Entity
-↓
-Repository
-↓
-Database
+강남구 공중화장실
+서울특별시 강남구
+categoryId = 1
 ```
-
-### Pagination 흐름
 
 ```text
-Postman
-↓
-Controller
-↓
-Pageable
-↓
-Repository
-↓
-Page<Entity>
-↓
-Page<Response DTO>
-↓
-JSON 응답
+수원시 체육관
+경기도 수원시
+categoryId = 2
 ```
-
-### Validation 흐름
 
 ```text
-Postman
-↓
-JSON 요청
-↓
-@RequestBody
-↓
-DTO 생성
-↓
-@Valid
-↓
-@NotBlank / @NotNull 검사
-↓
-MethodArgumentNotValidException
-↓
-GlobalExceptionHandler
-↓
-400 Bad Request
+성남시 체육관
+경기도 성남시
+categoryId = 2
 ```
+<img width="728" height="676" alt="favorite 카테고리 조회 테스트값 넣음" src="https://github.com/user-attachments/assets/d8d085dd-b0a4-40a5-bb2f-b9f7e9742df6" />
 
 ---
 
-## 주요 학습 내용
+## 테스트 결과
 
-* DTO와 Entity 분리
-* JPA Repository 활용
-* 메서드 네이밍 기반 Query 생성
-* Pageable 기반 페이징 처리
-* Sort를 활용한 정렬 처리
-* Validation 및 전역 예외 처리
-* 계층형 아키텍처 기반 API 설계
+### 지역 필터
+
+```http
+GET /api/favorites/users/1/filter?region=서울
+```
+
+결과
+
+```text
+성북구 공중화장실
+강남구 공중화장실
+```
+
+서울 지역 시설만 정상 조회
+<img width="742" height="598" alt="favorite 서울 조건 필터" src="https://github.com/user-attachments/assets/7d54bf7b-71f1-4cfb-b022-b8153a6b4e6c" />
 
 ---
 
-## 향후 계획
+### 카테고리 필터
 
-### 사용자 기능 확장
+```http
+GET /api/favorites/users/1/filter?categoryId=2
+```
 
-* User CRUD 구현
-* 사용자별 시설 이용 기능 구축
-* 사용자 정보 관리 기능 추가
+결과
 
-### 사용자 맞춤 서비스
+```text
+수원시 체육관
+성남시 체육관
+```
 
-* 즐겨찾기(Favorite) 기능 구현
-* 리뷰(Review) 기능 구현
-* 사용자 활동 기반 서비스 확장
+체육관 카테고리 시설만 정상 조회
+<img width="714" height="562" alt="favorite 카테고리2 조건 필터" src="https://github.com/user-attachments/assets/49d09e4e-b976-4cae-a009-0e5401e3e34e" />
 
-### 보안 강화
+---
 
-* Spring Security 적용
-* BCrypt를 이용한 비밀번호 암호화
-* 인증(Authentication) 및 인가(Authorization) 구현
-* Role 기반 접근 제어 적용
+### 지역 + 카테고리 필터
 
-### 위치 기반 서비스
+```http
+GET /api/favorites/users/1/filter?region=경기도&categoryId=2
+```
 
-* 사용자 위치 기반 시설 조회
-* 거리순 정렬 기능 제공
-* 지도 API 연동
+결과
 
-### 공공데이터 연동
+```text
+수원시 체육관
+성남시 체육관
+```
 
-* 공공데이터 API 연동
-* 시설 정보 자동 수집 및 동기화
-* 중복 데이터 저장 방지 전략 적용
+복합 조건 정상 동작 확인
+<img width="709" height="572" alt="favorite 복합 조건 조회 성공" src="https://github.com/user-attachments/assets/c2a70920-5490-422b-becd-9c76fddec4d0" />
 
-### 운영 환경 고려
+---
 
-* 서버 운영 중 데이터베이스 스키마 변경 전략 학습
-* 데이터 마이그레이션 방식 적용
-* 무중단 배포 환경 구성 검토
+## 학습 내용
 
-### 성능 최적화
+### @RequestParam
 
-* 인덱스(Index)를 활용한 조회 성능 개선
-* 대용량 데이터 환경에서의 페이징 최적화
-* 캐시 적용 검토
+```java
+@RequestParam(required = false)
+```
 
-### 동시성 문제 해결
+를 사용하여 선택적인 검색 조건을 받을 수 있음을 학습하였다.
 
-* 공공데이터 동기화 중복 저장 방지
-* 여러 관리자 동시 수정 상황 처리
-* 즐겨찾기 중복 등록 방지
-* 트랜잭션(Transaction) 기반 데이터 정합성 유지
+파라미터가 없는 경우에도 예외를 발생시키지 않고 null로 처리할 수 있다.
 
-### 네트워크 및 보안 학습
+---
 
-* HTTPS 통신 구조 이해
-* RSA 기반 키 교환 방식 학습
-* AES 기반 데이터 암호화 적용
-* 인증 정보 및 암호화 키 관리 방법 학습
+### JPA 연관관계 경로 탐색
 
+연관관계 Entity를 조회할 경우
+
+```text
+user.id
+facility.address
+facility.category.id
+```
+
+형태로 탐색이 이루어짐을 학습하였다.
+
+---
+
+### 검색 API 설계
+
+검색 조건이 여러 개 존재할 경우
+
+```text
+복합 조건
+↓
+단일 조건
+↓
+예외 처리
+```
+
+순서로 분기하는 것이 중요함을 학습하였다.
+
+---
+
+### Favorite 기능 확장 방향
+
+현재 Favorite 기능은
+
+* 등록
+* 조회
+* 삭제
+* 조건 검색
+
+까지 구현하였다.
+
+향후에는
+
+* Favorite Group 기능
+* 사용자 정의 즐겨찾기 폴더
+* 시설명 검색
+* Favorite 목록 페이징 적용
+* Favorite 목록 정렬 기능
+* Spring Security 기반 사용자 인증
+
+기능을 추가할 예정이다.
