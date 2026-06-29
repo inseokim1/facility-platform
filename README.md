@@ -1,32 +1,25 @@
-# Facility Platform
+## 작업 내용
+- 시설명 검색 기능 추가
+- 카테고리별 시설 조회 기능 추가
+- 시설명 + 카테고리 복합 검색 기능 추가
+- FacilityRepository에 검색용 Query Method 추가
 
-공공시설 정보를 효율적으로 조회하고 관리할 수 있는 Spring Boot 기반 공공시설 통합 플랫폼입니다.
+## 구현 API
+- GET /api/facilities/search?keyword=성북
+- GET /api/facilities/search/category?categoryId=1
+- GET /api/facilities/search/detail?keyword=성북&categoryId=1
 
-이 프로젝트는 공공데이터를 활용하여 시설 정보를 제공하고, 사용자가 카테고리별 시설 조회, 위치 기반 검색, 즐겨찾기, 리뷰 기능을 사용할 수 있도록 설계되었습니다.
+## 테스트
+- Postman으로 시설명 검색 정상 조회 확인
+- Postman으로 카테고리별 시설 조회 확인
+- Postman으로 복합 검색 정상 조회 확인
 
-## 초기 구현 내용
+시설 검색 기능
 
-본 프로젝트는 공공시설 정보를 카테고리 기반으로 관리하는 플랫폼을 목표로 시작했습니다.
+<img width="753" height="692" alt="facility 시설검색 기능" src="https://github.com/user-attachments/assets/fe504fea-4fb5-442c-9c42-71c37b7f4811" />
 
-초기 단계에서는 Spring Boot 기반 프로젝트 구조를 구성하고, MySQL 데이터베이스와 연동하여 기본적인 Category API를 구현했습니다.
+시설 복합 검색 기능 
 
-### 주요 작업
+<img width="767" height="760" alt="facility 복합 검색 구현" src="https://github.com/user-attachments/assets/5393aaaa-2a73-46a0-b009-9f08ef4fc54b" />
 
-- Spring Boot 프로젝트 생성
-- MySQL 데이터베이스 연결
-- Category Entity 생성
-- CategoryRepository 생성
-- CategoryService 생성
-- CategoryController 생성
-- Request/Response DTO 적용
-- Postman을 활용한 기본 API 테스트
 
-### 초기 API
-
-- POST /api/categories
-- GET /api/categories
-
-### 설계 방향
-
-초기 구현에서는 Controller가 Entity를 직접 주고받지 않도록 DTO를 적용했습니다.  
-이를 통해 API 요청/응답 구조와 DB Entity 구조를 분리하고, 이후 기능 확장과 유지보수가 쉬운 구조를 만들고자 했습니다.
