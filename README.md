@@ -1,32 +1,29 @@
-# Facility Platform
+## 작업 내용
+- 시설 전체 조회 API에 페이징 기능 적용
+- page, size 요청 파라미터 추가
+- PageRequest를 사용해 Pageable 객체 생성
+- Facility Entity를 FacilityResponse DTO로 변환
+- 시설 목록을 id 기준 최신 등록순으로 정렬
 
-공공시설 정보를 효율적으로 조회하고 관리할 수 있는 Spring Boot 기반 공공시설 통합 플랫폼입니다.
+## 구현 API
+- GET /api/facilities?page=0&size=3
 
-이 프로젝트는 공공데이터를 활용하여 시설 정보를 제공하고, 사용자가 카테고리별 시설 조회, 위치 기반 검색, 즐겨찾기, 리뷰 기능을 사용할 수 있도록 설계되었습니다.
+## 테스트
+- page=0, size=3 요청 시 첫 페이지 데이터 3개 조회 확인
+- page=1, size=3 요청 시 다음 페이지 데이터 조회 확인
+- totalElements, totalPages, first, last 값 확인
+- id 기준 내림차순 정렬 확인
 
-## 초기 구현 내용
+## 테스트 결과
 
-본 프로젝트는 공공시설 정보를 카테고리 기반으로 관리하는 플랫폼을 목표로 시작했습니다.
+### page=0, size=3
 
-초기 단계에서는 Spring Boot 기반 프로젝트 구조를 구성하고, MySQL 데이터베이스와 연동하여 기본적인 Category API를 구현했습니다.
+- 시설 목록 페이징 조회 확인
+- 총 데이터 수(totalElements) 조회 확인
+- 총 페이지 수(totalPages) 조회 확인
+- id 기준 내림차순 정렬 확인
+- 첫 페이지(first=true) 확인
 
-### 주요 작업
+### 결과
+<img width="718" height="1315" alt="image" src="https://github.com/user-attachments/assets/b798fa40-3f08-46bf-b4f3-c2fc85bff873" />
 
-- Spring Boot 프로젝트 생성
-- MySQL 데이터베이스 연결
-- Category Entity 생성
-- CategoryRepository 생성
-- CategoryService 생성
-- CategoryController 생성
-- Request/Response DTO 적용
-- Postman을 활용한 기본 API 테스트
-
-### 초기 API
-
-- POST /api/categories
-- GET /api/categories
-
-### 설계 방향
-
-초기 구현에서는 Controller가 Entity를 직접 주고받지 않도록 DTO를 적용했습니다.  
-이를 통해 API 요청/응답 구조와 DB Entity 구조를 분리하고, 이후 기능 확장과 유지보수가 쉬운 구조를 만들고자 했습니다.
