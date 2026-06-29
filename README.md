@@ -12,7 +12,7 @@
 | ------------- | ---------: | ----------------: | ------------------ |
 | 시설명 정확 검색 API |       52ms |              12ms | 약 76.9% 개선         |
 | 시설명 포함 검색 API |      397ms |              54ms | 약 86.4% 개선         |
-| 실행 방식         | Table Scan |      Index Lookup | Full Table Scan 제거 |
+| 실행 방식         | Full Table Scan |      Index Lookup | Full Table Scan 제거 |
 | 사용 인덱스        |         없음 | idx_facility_name | B-Tree 인덱스 적용      |
 | DB Cost       |      11666 |              0.35 | 실행 비용 감소           |
 | 예상 조회 Rows    |      11385 |                 1 | 조회 대상 감소           |
